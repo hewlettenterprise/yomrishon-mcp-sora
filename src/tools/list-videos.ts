@@ -11,12 +11,15 @@ export function register(
   _config: Config,
   logger: Logger
 ): void {
-  server.tool(
+  server.registerTool(
     "sora_list_videos",
-    "List recent video generation jobs with optional filters. " +
-      "Supports pagination via cursor (pass the last_id from a previous response as 'after'), " +
-      "filtering by model name or job status, and configurable result limit (1–100).",
-    ListVideosSchema,
+    {
+      description:
+        "List recent video generation jobs with optional filters. " +
+        "Supports pagination via cursor (pass the last_id from a previous response as 'after'), " +
+        "filtering by model name or job status, and configurable result limit (1–100).",
+      inputSchema: ListVideosSchema,
+    },
     async (params) => {
       try {
         logger.info("list_videos", {

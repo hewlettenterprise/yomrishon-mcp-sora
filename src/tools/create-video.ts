@@ -19,14 +19,17 @@ export function register(
   config: Config,
   logger: Logger
 ): void {
-  server.tool(
+  server.registerTool(
     "sora_create_video",
-    "Create a new Sora 2 video generation job. Returns immediately with a job record " +
-      "(status will be 'queued' or 'in_progress'). Use sora_wait_for_video or sora_get_video " +
-      "to track completion. The prompt should describe the scene like a cinematography brief: " +
-      "subject, action, setting, camera motion, lighting, and style. " +
-      "Use input_reference to guide the opening frame, and characters for cross-shot consistency.",
-    CreateVideoSchema,
+    {
+      description:
+        "Create a new Sora 2 video generation job. Returns immediately with a job record " +
+        "(status will be 'queued' or 'in_progress'). Use sora_wait_for_video or sora_get_video " +
+        "to track completion. The prompt should describe the scene like a cinematography brief: " +
+        "subject, action, setting, camera motion, lighting, and style. " +
+        "Use input_reference to guide the opening frame, and characters for cross-shot consistency.",
+      inputSchema: CreateVideoSchema,
+    },
     async (params) => {
       try {
         const model = (params.model as string) ?? config.defaultModel;

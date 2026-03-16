@@ -11,12 +11,15 @@ export function register(
   _config: Config,
   logger: Logger
 ): void {
-  server.tool(
+  server.registerTool(
     "sora_get_video",
-    "Retrieve the current status and details of a video generation job by ID. " +
-      "Returns the normalized job record including status (queued, in_progress, completed, failed), " +
-      "progress percentage if available, error details if failed, and output URL if completed.",
-    GetVideoSchema,
+    {
+      description:
+        "Retrieve the current status and details of a video generation job by ID. " +
+        "Returns the normalized job record including status (queued, in_progress, completed, failed), " +
+        "progress percentage if available, error details if failed, and output URL if completed.",
+      inputSchema: GetVideoSchema,
+    },
     async (params) => {
       try {
         const videoId = params.video_id as string;

@@ -11,11 +11,14 @@ export function register(
   _config: Config,
   logger: Logger
 ): void {
-  server.tool(
+  server.registerTool(
     "sora_get_character",
-    "Retrieve metadata for a previously created character asset, including its ID, name, " +
-      "description, creation time, and associated file ID.",
-    GetCharacterSchema,
+    {
+      description:
+        "Retrieve metadata for a previously created character asset, including its ID, name, " +
+        "description, creation time, and associated file ID.",
+      inputSchema: GetCharacterSchema,
+    },
     async (params) => {
       try {
         const characterId = params.character_id as string;

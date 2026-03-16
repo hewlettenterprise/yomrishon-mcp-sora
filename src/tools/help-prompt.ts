@@ -11,14 +11,17 @@ export function register(
   _config: Config,
   _logger: Logger
 ): void {
-  server.tool(
+  server.registerTool(
     "sora_help_prompt",
-    "Generate a structured cinematography-style prompt brief from a rough idea. " +
-      "Returns a framework with sections for subject, action, setting, camera, lighting, " +
-      "style, continuity, and constraints — plus composition tips and an example structure. " +
-      "Does NOT call the OpenAI API. Use this to structure your thinking before calling " +
-      "sora_create_video. The output helps you compose a high-quality Sora prompt.",
-    HelpPromptSchema,
+    {
+      description:
+        "Generate a structured cinematography-style prompt brief from a rough idea. " +
+        "Returns a framework with sections for subject, action, setting, camera, lighting, " +
+        "style, continuity, and constraints — plus composition tips and an example structure. " +
+        "Does NOT call the OpenAI API. Use this to structure your thinking before calling " +
+        "sora_create_video. The output helps you compose a high-quality Sora prompt.",
+      inputSchema: HelpPromptSchema,
+    },
     async (params) => {
       try {
         const idea = params.idea as string;

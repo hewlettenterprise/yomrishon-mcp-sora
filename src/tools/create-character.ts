@@ -11,14 +11,17 @@ export function register(
   config: Config,
   logger: Logger
 ): void {
-  server.tool(
+  server.registerTool(
     "sora_create_character",
-    "Upload a character asset from a short video clip for reuse across multiple generations. " +
-      "Characters ensure visual consistency of a person, animal, or entity across different shots. " +
-      "Provide either a local file_path (must be in an allowed upload directory) or a previously " +
-      "uploaded file_id. After creation, reference the character by its ID in sora_create_video or " +
-      "sora_edit_video, and always mention the character by name in your prompt for best results.",
-    CreateCharacterSchema,
+    {
+      description:
+        "Upload a character asset from a short video clip for reuse across multiple generations. " +
+        "Characters ensure visual consistency of a person, animal, or entity across different shots. " +
+        "Provide either a local file_path (must be in an allowed upload directory) or a previously " +
+        "uploaded file_id. After creation, reference the character by its ID in sora_create_video or " +
+        "sora_edit_video, and always mention the character by name in your prompt for best results.",
+      inputSchema: CreateCharacterSchema,
+    },
     async (params) => {
       try {
         const filePath = params.file_path as string | undefined;

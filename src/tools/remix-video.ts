@@ -17,13 +17,16 @@ export function register(
   config: Config,
   logger: Logger
 ): void {
-  server.tool(
+  server.registerTool(
     "sora_remix_video",
-    "[DEPRECATED — prefer sora_edit_video] Remix an existing video with a new prompt. " +
-      "This tool is provided for backward compatibility only. Not all models support remix. " +
-      "Use sora_edit_video for new workflows, which provides the same functionality with " +
-      "better model support.",
-    RemixVideoSchema,
+    {
+      description:
+        "[DEPRECATED — prefer sora_edit_video] Remix an existing video with a new prompt. " +
+        "This tool is provided for backward compatibility only. Not all models support remix. " +
+        "Use sora_edit_video for new workflows, which provides the same functionality with " +
+        "better model support.",
+      inputSchema: RemixVideoSchema,
+    },
     async (params) => {
       try {
         const model = (params.model as string) ?? config.defaultModel;

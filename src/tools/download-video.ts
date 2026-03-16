@@ -11,13 +11,16 @@ export function register(
   _config: Config,
   logger: Logger
 ): void {
-  server.tool(
+  server.registerTool(
     "sora_download_video_content",
-    "Get a downloadable content URL for a completed video. Returns a signed URL with " +
-      "content type and expiration timestamp. The URL is temporary — download promptly or " +
-      "call this tool again when the URL expires. Only works for videos with status 'completed'. " +
-      "Check the expires_at field to know when the URL will become invalid.",
-    DownloadVideoSchema,
+    {
+      description:
+        "Get a downloadable content URL for a completed video. Returns a signed URL with " +
+        "content type and expiration timestamp. The URL is temporary — download promptly or " +
+        "call this tool again when the URL expires. Only works for videos with status 'completed'. " +
+        "Check the expires_at field to know when the URL will become invalid.",
+      inputSchema: DownloadVideoSchema,
+    },
     async (params) => {
       try {
         const videoId = params.video_id as string;

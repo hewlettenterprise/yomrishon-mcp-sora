@@ -11,13 +11,15 @@ export function register(
   _config: Config,
   _logger: Logger
 ): void {
-  server.tool(
+  server.registerTool(
     "sora_describe_capabilities",
-    "Return the current capability registry showing all supported models, resolutions, " +
-      "durations, and feature support (characters, image references, edits, extensions, remix). " +
-      "Use this tool FIRST to understand what parameter values are valid before calling other " +
-      "Sora tools. This is the canonical source of truth for model capabilities.",
-    {},
+    {
+      description:
+        "Return the current capability registry showing all supported models, resolutions, " +
+        "durations, and feature support (characters, image references, edits, extensions, remix). " +
+        "Use this tool FIRST to understand what parameter values are valid before calling other " +
+        "Sora tools. This is the canonical source of truth for model capabilities.",
+    },
     async () => {
       try {
         const summary = getCapabilitySummary();

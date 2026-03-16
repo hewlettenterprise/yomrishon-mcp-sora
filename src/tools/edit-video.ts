@@ -18,12 +18,15 @@ export function register(
   config: Config,
   logger: Logger
 ): void {
-  server.tool(
+  server.registerTool(
     "sora_edit_video",
-    "Edit an existing video using a new prompt. Takes a source video ID and an editing " +
-      "prompt describing the desired changes. Creates a new video job — the original video " +
-      "is not modified. Preferred over sora_remix_video for new workflows.",
-    EditVideoSchema,
+    {
+      description:
+        "Edit an existing video using a new prompt. Takes a source video ID and an editing " +
+        "prompt describing the desired changes. Creates a new video job — the original video " +
+        "is not modified. Preferred over sora_remix_video for new workflows.",
+      inputSchema: EditVideoSchema,
+    },
     async (params) => {
       try {
         const model = (params.model as string) ?? config.defaultModel;

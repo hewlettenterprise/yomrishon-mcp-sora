@@ -17,13 +17,16 @@ export function register(
   config: Config,
   logger: Logger
 ): void {
-  server.tool(
+  server.registerTool(
     "sora_extend_video",
-    "Extend a completed video by generating additional footage that continues from the " +
-      "end of the original clip. The extension uses the full source clip as context for " +
-      "visual and narrative continuity. The source video must have status 'completed'. " +
-      "This is different from editing — extensions only append new content.",
-    ExtendVideoSchema,
+    {
+      description:
+        "Extend a completed video by generating additional footage that continues from the " +
+        "end of the original clip. The extension uses the full source clip as context for " +
+        "visual and narrative continuity. The source video must have status 'completed'. " +
+        "This is different from editing — extensions only append new content.",
+      inputSchema: ExtendVideoSchema,
+    },
     async (params) => {
       try {
         const model = (params.model as string) ?? config.defaultModel;

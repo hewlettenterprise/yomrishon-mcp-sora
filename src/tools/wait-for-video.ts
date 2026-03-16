@@ -12,14 +12,17 @@ export function register(
   config: Config,
   logger: Logger
 ): void {
-  server.tool(
+  server.registerTool(
     "sora_wait_for_video",
-    "Poll a video job until it reaches a terminal status (completed or failed) or the " +
-      "maximum wait time is exceeded. Returns the final job record. WARNING: this tool may " +
-      "take several minutes to return depending on video generation time. Configure " +
-      "poll_interval_ms (default 5000) and max_wait_seconds (default 300) as needed. " +
-      "If the timeout is reached, use sora_get_video to check status manually later.",
-    WaitForVideoSchema,
+    {
+      description:
+        "Poll a video job until it reaches a terminal status (completed or failed) or the " +
+        "maximum wait time is exceeded. Returns the final job record. WARNING: this tool may " +
+        "take several minutes to return depending on video generation time. Configure " +
+        "poll_interval_ms (default 5000) and max_wait_seconds (default 300) as needed. " +
+        "If the timeout is reached, use sora_get_video to check status manually later.",
+      inputSchema: WaitForVideoSchema,
+    },
     async (params) => {
       try {
         const videoId = params.video_id as string;
