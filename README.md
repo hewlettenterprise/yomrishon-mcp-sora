@@ -124,6 +124,31 @@ node dist/index.js
 npm start
 ```
 
+### Docker
+
+```bash
+# Build
+docker build -t powder-mcp-sora .
+
+# Run
+docker run -e OPENAI_API_KEY=sk-... powder-mcp-sora
+```
+
+### CI/CD
+
+A GitHub Actions workflow at `.github/workflows/docker-publish.yml` automatically builds and pushes the Docker image to Docker Hub on:
+
+- Push to `main`
+- Version tags (`v*`)
+- Manual dispatch
+
+**Required GitHub repo secrets:**
+
+| Secret | Description |
+|---|---|
+| `DOCKERHUB_USERNAME` | Your Docker Hub username |
+| `DOCKERHUB_TOKEN` | Docker Hub access token |
+
 ---
 
 ## MCP client configuration
