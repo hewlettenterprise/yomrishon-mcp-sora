@@ -56,7 +56,7 @@ export async function startHttpServer(
   ctx: ServerContext,
   config: Config
 ): Promise<void> {
-  const serverInfo = { name: "yomrishon-mcp-sora", version: "1.0.1" };
+  const serverInfo = { name: "yomrishon-mcp-sora", version: "1.1.0" };
 
   const httpServer = createHttpServer(async (req: IncomingMessage, res: ServerResponse) => {
     const pathname = new URL(
