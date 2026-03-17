@@ -7,6 +7,7 @@ import type { ServerContext } from "./server.js";
 import { OpenAIClient } from "./openai-client.js";
 import { runWithClient } from "./request-context.js";
 import { registerAllTools } from "./tools/index.js";
+import { consumeDownloadToken } from "./download-tokens.js";
 
 // ---------------------------------------------------------------------------
 //  Helpers
@@ -67,6 +68,68 @@ export async function startHttpServer(
     if (pathname === "/health" && req.method === "GET") {
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ status: "ok" }));
+      return;
+    }
+
+    // Proxy download endpoint — token-authenticated, no API key needed on client
+    if (pathname.startsWith("/download/") && req.method === "GET") {
+      const token = pathname.slice("/download/".length);
+      if (!token || !/^[a-f0-9]{64}$/.test(token)) {
+        jsonError(res, 400, -32600, "Invalid download token");
+        return;
+      }
+
+      const entry = consumeDownloadToken(token);
+      if (!entry) {
+        jsonError(res, 404, -32001, "Download token expired or invalid");
+        return;
+      }
+
+      try {
+        const videoUrl = `${entry.baseUrl}/videos/${encodeURIComponent(entry.videoId)}/content`;
+        const upstream = await fetch(videoUrl, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${entry.apiKey}` },
+          redirect: "follow",
+        });
+
+        if (!upstream.ok) {
+          jsonError(res, 502, -32002, `Upstream error: ${upstream.status}`);
+          return;
+        }
+
+        const contentType = upstream.headers.get("content-type") ?? "video/mp4";
+        const contentLength = upstream.headers.get("content-length");
+        const headers: Record<string, string> = {
+          "Content-Type": contentType,
+          "Content-Disposition": `attachment; filename="${entry.videoId}.mp4"`,
+        };
+        if (contentLength) headers["Content-Length"] = contentLength;
+
+        res.writeHead(200, headers);
+
+        if (upstream.body) {
+          const reader = upstream.body.getReader();
+          const pump = async (): Promise<void> => {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              res.write(value);
+            }
+            res.end();
+          };
+          await pump();
+        } else {
+          res.end();
+        }
+      } catch (err) {
+        ctx.logger.error("download_proxy_error", {
+          error: err instanceof Error ? err.message : String(err),
+        });
+        if (!res.headersSent) {
+          jsonError(res, 502, -32002, "Failed to proxy download");
+        }
+      }
       return;
     }
 

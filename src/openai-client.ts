@@ -75,6 +75,14 @@ export class OpenAIClient {
     this.authHeader = `Bearer ${config.openaiApiKey}`;
   }
 
+  getApiKey(): string {
+    return this.config.openaiApiKey!;
+  }
+
+  getBaseUrl(): string {
+    return this.baseUrl;
+  }
+
   private nextRequestId(): string {
     return `req_${++this.requestCounter}_${Date.now()}`;
   }
@@ -242,14 +250,62 @@ export class OpenAIClient {
   }
 
   async getVideoContent(videoId: string): Promise<VideoContent> {
-    const raw = await this.request<RawContentResponse>(
-      "GET",
-      `/videos/${encodeURIComponent(videoId)}/content`
-    );
+    const requestId = this.nextRequestId();
+    const path = `/videos/${encodeURIComponent(videoId)}/content`;
+    const url = `${this.baseUrl}${path}`;
+
+    this.logger.debug("openai_request", { requestId, method: "GET", path });
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: "GET",
+        headers: { Authorization: this.authHeader },
+        redirect: "manual",
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw openaiApiError(
+        `Network error calling OpenAI API: ${message}`,
+        undefined,
+        { requestId, path }
+      );
+    }
+
+    // If the API redirects to a download URL, return that URL
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location");
+      if (location) {
+        return {
+          url: location,
+          content_type: response.headers.get("content-type") ?? "video/mp4",
+          expires_at: "",
+        };
+      }
+    }
+
+    if (!response.ok) {
+      return this.handleErrorResponse(response, requestId, path);
+    }
+
+    const contentType = response.headers.get("content-type") ?? "";
+
+    // If the response is JSON, parse it normally
+    if (contentType.includes("application/json")) {
+      const raw = (await response.json()) as RawContentResponse;
+      return {
+        url: raw.url,
+        content_type: raw.content_type ?? "video/mp4",
+        expires_at: raw.expires_at ?? "",
+      };
+    }
+
+    // The API returned binary video data directly — return the direct API URL
+    // so the caller can download it themselves
     return {
-      url: raw.url,
-      content_type: raw.content_type ?? "video/mp4",
-      expires_at: raw.expires_at ?? "",
+      url,
+      content_type: contentType || "video/mp4",
+      expires_at: "",
     };
   }
 

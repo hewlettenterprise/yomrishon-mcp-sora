@@ -5,21 +5,22 @@ import type { Logger } from "../logger.js";
 import { DownloadVideoSchema } from "../validation.js";
 import { formatErrorForMcp, assetError } from "../errors.js";
 import { getRequestClient } from "../request-context.js";
+import { createDownloadToken } from "../download-tokens.js";
 
 export function register(
   server: McpServer,
   defaultClient: OpenAIClient | null,
-  _config: Config,
+  config: Config,
   logger: Logger
 ): void {
   server.registerTool(
     "sora_download_video_content",
     {
       description:
-        "Get a downloadable content URL for a completed video. Returns a signed URL with " +
-        "content type and expiration timestamp. The URL is temporary — download promptly or " +
-        "call this tool again when the URL expires. Only works for videos with status 'completed'. " +
-        "Check the expires_at field to know when the URL will become invalid.",
+        "Get a downloadable URL for a completed video. Returns a proxy download URL that " +
+        "can be used directly without any authentication. The URL is single-use and expires " +
+        "after 10 minutes — download promptly or call this tool again for a new URL. " +
+        "Only works for videos with status 'completed'.",
       inputSchema: DownloadVideoSchema,
     },
     async (params) => {
@@ -39,11 +40,25 @@ export function register(
           );
         }
 
+        // Verify the video content is accessible before issuing a token
         const content = await client.getVideoContent(videoId);
+
+        const token = createDownloadToken(
+          videoId,
+          client.getApiKey(),
+          client.getBaseUrl()
+        );
+        const downloadUrl = `http://${config.httpHost}:${config.httpPort}/download/${token}`;
+
+        const result = {
+          download_url: downloadUrl,
+          content_type: content.content_type,
+          expires_in_seconds: 600,
+        };
 
         return {
           content: [
-            { type: "text" as const, text: JSON.stringify(content, null, 2) },
+            { type: "text" as const, text: JSON.stringify(result, null, 2) },
           ],
         };
       } catch (err) {
