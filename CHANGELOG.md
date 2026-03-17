@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.0](https://github.com/Yom-Rishon/yomrishon-mcp-sora/compare/v1.1.0...v1.2.0) (2026-03-17)
+
+
+### Features
+
+* add release manager skill and conventional commits reference ([6e72e62](https://github.com/Yom-Rishon/yomrishon-mcp-sora/commit/6e72e6268eacd87d0125381f142204f9ff4ebdcb))
+* add support for short-lived download tokens in README ([b9d72b9](https://github.com/Yom-Rishon/yomrishon-mcp-sora/commit/b9d72b9c6e4f8c5cff723305c3eec45ad78e9201))
+* disable default request timeout for SSE streams in HTTP server ([44a38d6](https://github.com/Yom-Rishon/yomrishon-mcp-sora/commit/44a38d615a078f0378525e60656481a715131e6c))
+* remove branch restriction from Docker publish workflow ([f4a2e59](https://github.com/Yom-Rishon/yomrishon-mcp-sora/commit/f4a2e596b3973a4d7726ef74635cd6af484a8661))
+* remove remix video functionality and update related capabilities in documentation ([4b27920](https://github.com/Yom-Rishon/yomrishon-mcp-sora/commit/4b279204dee6b94e1507d665447003aff8c2f570))
+* remove step to update Docker Hub README in workflow ([6e81336](https://github.com/Yom-Rishon/yomrishon-mcp-sora/commit/6e813360ccabc641c63e286950755958cfb03186))
+* update character creation to use FormData and remove unsupported metadata ([b412a89](https://github.com/Yom-Rishon/yomrishon-mcp-sora/commit/b412a89e7d93d6e166bd02e85efd2efef362b0e5))
+* update version to 1.3.0 in package.json ([08629cb](https://github.com/Yom-Rishon/yomrishon-mcp-sora/commit/08629cb30a83f69c2f5f58741634eaa661f6977f))
+
 ## [1.1.0](https://github.com/Yom-Rishon/yomrishon-mcp-sora/compare/v1.0.1...v1.1.0) (2026-03-17)
 
 
