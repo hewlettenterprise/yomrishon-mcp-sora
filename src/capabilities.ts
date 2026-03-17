@@ -16,7 +16,6 @@ export interface ModelCapabilities {
   supportsImageReference: boolean;
   supportsEdit: boolean;
   supportsExtend: boolean;
-  supportsRemix: boolean;
   maxCharacters: number;
   maxExtensionSeconds?: number;
   notes?: string;
@@ -47,7 +46,6 @@ export const CAPABILITY_REGISTRY: CapabilityRegistry = {
     "download",
     "character_create",
     "character_get",
-    "remix",
   ],
   models: {
     "sora-2": {
@@ -57,13 +55,12 @@ export const CAPABILITY_REGISTRY: CapabilityRegistry = {
         "1024x1792",
         "1792x1024",
       ],
-      durations: [4, 8, 12],
+      durations: [4, 8, 12, 16, 20],
       supportsCharacters: true,
       supportsImageReference: true,
       supportsEdit: true,
       supportsExtend: true,
-      supportsRemix: true,
-      maxCharacters: 5,
+      maxCharacters: 2,
       maxExtensionSeconds: 20,
       notes: "General-purpose Sora 2 model. Balanced quality and speed.",
     },
@@ -73,17 +70,18 @@ export const CAPABILITY_REGISTRY: CapabilityRegistry = {
         "720x1280",
         "1024x1792",
         "1792x1024",
+        "1920x1080",
+        "1080x1920",
       ],
-      durations: [4, 8, 12],
+      durations: [4, 8, 12, 16, 20],
       supportsCharacters: true,
       supportsImageReference: true,
       supportsEdit: true,
       supportsExtend: true,
-      supportsRemix: true,
-      maxCharacters: 5,
+      maxCharacters: 2,
       maxExtensionSeconds: 20,
       notes:
-        "Higher-quality Sora 2 model. Supports 4K. Slower generation times.",
+        "Higher-quality Sora 2 model. Supports 1080p (1920x1080, 1080x1920). Slower generation times.",
     },
   },
 };
@@ -120,7 +118,6 @@ export function getCapabilitySummary(): Record<string, unknown> {
       image_reference: caps.supportsImageReference,
       edit: caps.supportsEdit,
       extend: caps.supportsExtend,
-      remix: caps.supportsRemix,
       max_characters: caps.maxCharacters,
       max_extension_seconds: caps.maxExtensionSeconds,
       notes: caps.notes,

@@ -12,7 +12,6 @@ import { register as registerExtendVideo } from "./extend-video.js";
 import { register as registerCreateCharacter } from "./create-character.js";
 import { register as registerGetCharacter } from "./get-character.js";
 import { register as registerWaitForVideo } from "./wait-for-video.js";
-import { register as registerRemixVideo } from "./remix-video.js";
 import { register as registerDescribeCapabilities } from "./describe-capabilities.js";
 import { register as registerHelpPrompt } from "./help-prompt.js";
 
@@ -32,9 +31,8 @@ export function registerAllTools(
   registerCreateCharacter(server, client, config, logger);
   registerGetCharacter(server, client, config, logger);
   registerWaitForVideo(server, client, config, logger);
-  registerRemixVideo(server, client, config, logger);
   registerDescribeCapabilities(server, client, config, logger);
   registerHelpPrompt(server, client, config, logger);
 
-  logger.info("tools_registered", { count: 12 });
+  logger.info("tools_registered", { count: 11 });
 }

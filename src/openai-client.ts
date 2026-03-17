@@ -195,7 +195,7 @@ export class OpenAIClient {
     prompt: string;
     size: string;
     seconds: number;
-    input_reference?: { type: string; url?: string; file_id?: string };
+    input_reference?: { image_url?: string; file_id?: string };
     characters?: Array<{ id: string; name: string }>;
     metadata?: Record<string, string>;
   }): Promise<VideoJob> {
@@ -206,7 +206,8 @@ export class OpenAIClient {
       seconds: String(params.seconds),
     };
     if (params.input_reference) body.input_reference = params.input_reference;
-    if (params.characters?.length) body.characters = params.characters;
+    if (params.characters?.length)
+      body.characters = params.characters.map((c) => ({ id: c.id }));
     // metadata is MCP-only context; OpenAI API does not accept it
 
     const raw = await this.request<RawVideoResponse>(
@@ -228,14 +229,12 @@ export class OpenAIClient {
   async listVideos(params?: {
     limit?: number;
     after?: string;
-    model?: string;
-    status?: string;
+    order?: "asc" | "desc";
   }): Promise<VideoListResult> {
     const query = new URLSearchParams();
     if (params?.limit) query.set("limit", String(params.limit));
     if (params?.after) query.set("after", params.after);
-    if (params?.model) query.set("model", params.model);
-    if (params?.status) query.set("status", params.status);
+    if (params?.order) query.set("order", params.order);
 
     const qs = query.toString();
     const path = `/videos${qs ? `?${qs}` : ""}`;
@@ -345,112 +344,26 @@ export class OpenAIClient {
     return this.normalizeVideoJob(raw);
   }
 
-  async remixVideo(params: {
-    source_video_id: string;
-    prompt: string;
-  }): Promise<VideoJob> {
-    const body: Record<string, unknown> = {
-      prompt: params.prompt,
-    };
-
-    const raw = await this.request<RawVideoResponse>(
-      "POST",
-      `/videos/${encodeURIComponent(params.source_video_id)}/remix`,
-      body
-    );
-    return this.normalizeVideoJob(raw);
-  }
-
   // -- Character operations --------------------------------------------------
 
   async createCharacter(params: {
     name: string;
-    file_path?: string;
-    file_id?: string;
-    description?: string;
+    file_path: string;
   }): Promise<Character> {
-    if (params.file_path) {
-      const fileId = await this.uploadFile(params.file_path);
-      return this.createCharacterFromFileId(
-        params.name,
-        fileId,
-        params.description
-      );
-    }
-    if (params.file_id) {
-      return this.createCharacterFromFileId(
-        params.name,
-        params.file_id,
-        params.description
-      );
-    }
-    throw openaiApiError(
-      "Either file_path or file_id is required to create a character."
-    );
-  }
-
-  private async uploadFile(filePath: string): Promise<string> {
-    const fileBuffer = await readFile(filePath);
-    const fileName = basename(filePath);
+    const fileBuffer = await readFile(params.file_path);
+    const fileName = basename(params.file_path);
 
     const formData = new FormData();
-    formData.append("purpose", "video");
-    formData.append("file", new Blob([fileBuffer]), fileName);
-
-    const requestId = this.nextRequestId();
-    const url = `${this.baseUrl}/files`;
-    const start = Date.now();
-
-    this.logger.debug("openai_file_upload", { requestId, fileName });
-
-    let response: Response;
-    try {
-      response = await fetch(url, {
-        method: "POST",
-        headers: { Authorization: this.authHeader },
-        body: formData,
-      });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      throw openaiApiError(
-        `Network error uploading file: ${message}`,
-        undefined,
-        { requestId }
-      );
-    }
-
-    const elapsed = Date.now() - start;
-    this.logger.debug("openai_file_upload_response", {
-      requestId,
-      status: response.status,
-      elapsed_ms: elapsed,
-    });
-
-    if (!response.ok) {
-      return this.handleErrorResponse(response, requestId, "/files");
-    }
-
-    const json = (await response.json()) as {
-      id: string;
-      [key: string]: unknown;
-    };
-    return json.id;
-  }
-
-  private async createCharacterFromFileId(
-    name: string,
-    fileId: string,
-    description?: string
-  ): Promise<Character> {
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("file_id", fileId);
-    if (description) formData.append("description", description);
+    formData.append("name", params.name);
+    formData.append("video", new Blob([fileBuffer]), fileName);
 
     const requestId = this.nextRequestId();
     const url = `${this.baseUrl}/videos/characters`;
 
-    this.logger.debug("openai_create_character", { requestId, name, fileId });
+    this.logger.debug("openai_create_character", {
+      requestId,
+      name: params.name,
+    });
 
     let response: Response;
     try {
@@ -469,7 +382,11 @@ export class OpenAIClient {
     }
 
     if (!response.ok) {
-      return this.handleErrorResponse(response, requestId, "/videos/characters");
+      return this.handleErrorResponse(
+        response,
+        requestId,
+        "/videos/characters"
+      );
     }
 
     const raw = (await response.json()) as RawCharacterResponse;

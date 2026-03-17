@@ -14,7 +14,7 @@ graph TD
     Client -->|"stdio or HTTP (JSON-RPC)"| Server
 
     subgraph Server["MCP Server (yomrishon-mcp-sora)"]
-        Tools["12 Tools<br/>(tools/)"]
+        Tools["11 Tools<br/>(tools/)"]
         Validation["Validation<br/>(Zod)"]
         Capabilities["Capability<br/>Registry"]
         OpenAIClient["OpenAI<br/>Client"]
@@ -78,7 +78,6 @@ yomrishon-mcp-sora/
         ├── create-character.ts       # sora_create_character
         ├── get-character.ts          # sora_get_character
         ├── wait-for-video.ts         # sora_wait_for_video
-        ├── remix-video.ts            # sora_remix_video (deprecated)
         ├── describe-capabilities.ts  # sora_describe_capabilities
         └── help-prompt.ts            # sora_help_prompt
 ```
@@ -270,9 +269,9 @@ Create a new video generation job.
 ```json
 {
   "prompt": "A golden retriever runs through a sunlit meadow at dawn. Slow tracking shot from the side, golden hour light streaming through tall grass. Cinematic, shallow depth of field, 35mm film grain.",
-  "model": "sora-2",
+  "model": "sora-2-pro",
   "size": "1920x1080",
-  "seconds": 10
+  "seconds": 8
 }
 ```
 
@@ -285,11 +284,11 @@ With image reference:
     "type": "image_url",
     "url": "https://example.com/winter-landscape.jpg"
   },
-  "seconds": 15
+  "seconds": 12
 }
 ```
 
-With characters:
+With characters (max 2 per video — mention character name in the prompt for best results):
 
 ```json
 {
@@ -297,7 +296,7 @@ With characters:
   "characters": [
     { "id": "char_abc123", "name": "Luna" }
   ],
-  "seconds": 10
+  "seconds": 8
 }
 ```
 
@@ -331,13 +330,12 @@ Block until the job completes or times out.
 
 ### `sora_list_videos`
 
-List recent jobs with optional filters.
+List recent jobs with optional pagination and ordering.
 
 ```json
 {
-  "status": "completed",
-  "model": "sora-2",
-  "limit": 10
+  "limit": 10,
+  "order": "desc"
 }
 ```
 
@@ -374,8 +372,7 @@ Edit an existing video with a new prompt.
 ```json
 {
   "source_video_id": "vid_abc123",
-  "prompt": "Change the lighting to a warm sunset tone and slow the camera movement.",
-  "model": "sora-2"
+  "prompt": "Change the lighting to a warm sunset tone and slow the camera movement."
 }
 ```
 
@@ -383,13 +380,13 @@ Edit an existing video with a new prompt.
 
 ### `sora_extend_video`
 
-Extend a completed video with additional footage.
+Extend a completed video with additional footage (up to 20s per extension, max 6 extensions for 120s total).
 
 ```json
 {
   "video_id": "vid_abc123",
   "prompt": "The camera continues to pan right, revealing a hidden waterfall behind the trees.",
-  "seconds": 10
+  "seconds": 8
 }
 ```
 
@@ -397,23 +394,12 @@ Extend a completed video with additional footage.
 
 ### `sora_create_character`
 
-Upload a character for cross-shot consistency.
+Upload a character from a short video clip (2–4s, 720p–1080p) for cross-shot consistency.
 
 ```json
 {
   "name": "Luna",
-  "file_path": "/tmp/luna-reference.mp4",
-  "description": "Female astronaut, short dark hair, blue flight suit"
-}
-```
-
-Or from a previously uploaded file:
-
-```json
-{
-  "name": "Luna",
-  "file_id": "file_abc123",
-  "description": "Female astronaut, short dark hair, blue flight suit"
+  "file_path": "/tmp/luna-reference.mp4"
 }
 ```
 
@@ -424,20 +410,6 @@ Or from a previously uploaded file:
 ```json
 {
   "character_id": "char_abc123"
-}
-```
-
----
-
-### `sora_remix_video`
-
-> **Deprecated** — use `sora_edit_video` instead.
-
-```json
-{
-  "source_video_id": "vid_abc123",
-  "prompt": "Same scene but in anime style.",
-  "model": "sora-2"
 }
 ```
 

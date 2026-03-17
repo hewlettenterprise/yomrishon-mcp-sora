@@ -63,16 +63,6 @@ export function validateExtendSupport(model: string): void {
   }
 }
 
-export function validateRemixSupport(model: string): void {
-  const caps = getModelCapabilities(model);
-  if (!caps?.supportsRemix) {
-    throw capabilityError(
-      `Model "${model}" does not support remix. Use sora_edit_video instead.`,
-      { model }
-    );
-  }
-}
-
 export function validateCharacterSupport(
   model: string,
   count: number
@@ -112,14 +102,14 @@ export function normalizeInputReference(ref: {
   file_id?: string;
   base64?: string;
   media_type?: string;
-}): { type: string; url?: string; file_id?: string } {
+}): { image_url?: string; file_id?: string } {
   if (ref.type === "image_url") {
     if (!ref.url) {
       throw validationError(
         'input_reference type "image_url" requires a "url" field.'
       );
     }
-    return { type: "image_url", url: ref.url };
+    return { image_url: ref.url };
   }
 
   if (ref.type === "file_id") {
@@ -128,7 +118,7 @@ export function normalizeInputReference(ref: {
         'input_reference type "file_id" requires a "file_id" field.'
       );
     }
-    return { type: "file_id", file_id: ref.file_id };
+    return { file_id: ref.file_id };
   }
 
   if (ref.type === "base64") {
@@ -139,7 +129,7 @@ export function normalizeInputReference(ref: {
     }
     const mediaType = ref.media_type ?? "image/png";
     const dataUri = `data:${mediaType};base64,${ref.base64}`;
-    return { type: "image_url", url: dataUri };
+    return { image_url: dataUri };
   }
 
   throw validationError(
@@ -227,14 +217,15 @@ export const CreateVideoSchema = {
     .string()
     .optional()
     .describe(
-      "Video resolution, e.g. 1280x720, 720x1280, 1792x1024, 1024x1792. Defaults to 720x1280."
+      "Video resolution. sora-2: 1280x720, 720x1280, 1792x1024, 1024x1792. " +
+      "sora-2-pro adds 1920x1080 and 1080x1920. Defaults to 720x1280."
     ),
   seconds: z
     .number()
     .int()
     .positive()
     .optional()
-    .describe("Video duration in seconds (allowed: 4, 8, 12). Defaults to 4."),
+    .describe("Video duration in seconds (allowed: 4, 8, 12, 16, 20). Defaults to 4."),
   input_reference: z
     .object({
       type: z
@@ -312,14 +303,10 @@ export const ListVideosSchema = {
     .string()
     .optional()
     .describe("Pagination cursor: return videos after this ID."),
-  model: z
-    .string()
+  order: z
+    .enum(["asc", "desc"])
     .optional()
-    .describe("Filter by model name (e.g. sora-2)."),
-  status: z
-    .enum(["queued", "in_progress", "completed", "failed"])
-    .optional()
-    .describe("Filter by job status."),
+    .describe("Sort order by timestamp: 'asc' for ascending, 'desc' for descending."),
 };
 
 export const DownloadVideoSchema = {
@@ -414,14 +401,6 @@ export const WaitForVideoSchema = {
     .describe(
       "Maximum time to wait in seconds (10–600). Default: 300."
     ),
-};
-
-export const RemixVideoSchema = {
-  source_video_id: z
-    .string()
-    .min(1)
-    .describe("Source video ID to remix."),
-  prompt: z.string().min(1).describe("Remix prompt."),
 };
 
 export const HelpPromptSchema = {

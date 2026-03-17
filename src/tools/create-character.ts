@@ -27,33 +27,26 @@ export function register(
       try {
         const client = getRequestClient(defaultClient);
         const filePath = params.file_path as string | undefined;
-        const fileId = params.file_id as string | undefined;
 
-        if (!filePath && !fileId) {
+        if (!filePath) {
           throw validationError(
-            "Either file_path or file_id is required. Provide a local video file path or " +
-              "a previously uploaded file ID."
+            "file_path is required. The OpenAI Characters API requires a direct video " +
+              "file upload to POST /videos/characters."
           );
         }
 
-        let resolvedPath: string | undefined;
-        if (filePath) {
-          resolvedPath = await validateVideoFile(
-            filePath,
-            config.allowedUploadDirs
-          );
-        }
+        const resolvedPath = await validateVideoFile(
+          filePath,
+          config.allowedUploadDirs
+        );
 
         logger.info("create_character", {
           name: params.name,
-          source: filePath ? "file_path" : "file_id",
         });
 
         const character = await client.createCharacter({
           name: params.name as string,
           file_path: resolvedPath,
-          file_id: fileId,
-          description: params.description as string | undefined,
         });
 
         return {

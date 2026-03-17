@@ -26,15 +26,13 @@ export function register(
         const client = getRequestClient(defaultClient);
         logger.info("list_videos", {
           limit: params.limit,
-          model: params.model,
-          status: params.status,
+          order: params.order,
         });
 
         const result = await client.listVideos({
           limit: params.limit as number | undefined,
           after: params.after as string | undefined,
-          model: params.model as string | undefined,
-          status: params.status as string | undefined,
+          order: params.order as "asc" | "desc" | undefined,
         });
 
         return {
