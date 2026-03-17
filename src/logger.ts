@@ -30,7 +30,7 @@ export class Logger {
     if (data) {
       entry.data = this.redact(data);
     }
-    // Write to stderr so stdout stays clean for MCP stdio transport
+    // Write structured logs to stderr
     process.stderr.write(JSON.stringify(entry) + "\n");
   }
 

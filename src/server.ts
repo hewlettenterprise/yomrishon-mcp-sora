@@ -11,7 +11,7 @@ const pkg = require("../package.json") as { name: string; version: string };
 export interface ServerContext {
   server: McpServer;
   logger: Logger;
-  /** Default client (stdio mode) or null (HTTP mode with per-session keys). */
+  /** Fallback client when OPENAI_API_KEY is set; null otherwise. */
   defaultClient: OpenAIClient | null;
 }
 
@@ -19,8 +19,8 @@ export interface ServerContext {
 export function createServer(config: Config): ServerContext {
   const logger = new Logger(config);
 
-  // In stdio mode, build a single client at startup.
-  // In HTTP mode, clients are created per-session — defaultClient is null.
+  // If an API key is configured, build a fallback client.
+  // Per-request clients are created from the Authorization header.
   const defaultClient = config.openaiApiKey
     ? new OpenAIClient(
         { ...config, openaiApiKey: config.openaiApiKey },
@@ -36,7 +36,7 @@ export function createServer(config: Config): ServerContext {
   registerAllTools(server, defaultClient, config, logger);
 
   logger.info("server_created", {
-    transport: config.transport,
+    transport: "http",
     defaultModel: config.defaultModel,
     debug: config.debug,
     hasDefaultClient: defaultClient !== null,

@@ -11,7 +11,7 @@ Exposes Sora 2 video workflows as MCP tools so AI clients can generate, edit, ex
 ```mermaid
 graph TD
     Client["MCP Client (Claude, GPT, etc.)"]
-    Client -->|"stdio or HTTP (JSON-RPC)"| Server
+    Client -->|"HTTP (JSON-RPC)"| Server
 
     subgraph Server["MCP Server (yomrishon-mcp-sora)"]
         Tools["11 Tools<br/>(tools/)"]
@@ -54,7 +54,7 @@ yomrishon-mcp-sora/
 ├── .env.example
 ├── README.md
 └── src/
-    ├── index.ts              # Entry point (stdio / HTTP auto-select)
+    ├── index.ts              # Entry point (HTTP server)
     ├── server.ts             # MCP server factory
     ├── http-server.ts        # Streamable HTTP transport server
     ├── request-context.ts    # Per-request client via AsyncLocalStorage
@@ -108,25 +108,20 @@ cp .env.example .env
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `OPENAI_API_KEY` | **stdio** | — | OpenAI API key (required in stdio mode; optional in HTTP mode) |
+| `OPENAI_API_KEY` | No | — | OpenAI API key (fallback when clients omit the Authorization header) |
 | `OPENAI_BASE_URL` | No | `https://api.openai.com/v1` | API base URL |
 | `SORA_DEFAULT_MODEL` | No | `sora-2` | Default model for generation |
 | `SORA_MAX_POLL_SECONDS` | No | `300` | Max polling duration |
 | `SORA_POLL_INTERVAL_MS` | No | `5000` | Polling interval |
 | `SORA_DEBUG` | No | `false` | Enable debug logging |
 | `SORA_ALLOWED_UPLOAD_DIRS` | No | `/tmp` | Comma-separated allowed upload directories |
-| `MCP_TRANSPORT` | No | `stdio` | Transport mode: `stdio` or `http` |
-| `MCP_HTTP_PORT` | No | `3000` | HTTP listen port (HTTP mode only) |
-| `MCP_HTTP_HOST` | No | `127.0.0.1` | HTTP listen host (HTTP mode only) |
+| `MCP_HTTP_PORT` | No | `3000` | HTTP listen port |
+| `MCP_HTTP_HOST` | No | `127.0.0.1` | HTTP listen host |
 
 ### Run
 
 ```bash
-# Stdio mode (default)
 node dist/index.js
-
-# HTTP mode
-MCP_TRANSPORT=http node dist/index.js
 ```
 
 ### Docker
@@ -158,56 +153,21 @@ A GitHub Actions workflow at `.github/workflows/docker-publish.yml` automaticall
 
 ## MCP client configuration
 
-### Claude Desktop / VS Code
+### HTTP transport
 
-Add to your MCP settings (e.g., `claude_desktop_config.json` or VS Code MCP settings):
-
-```json
-{
-  "mcpServers": {
-    "sora": {
-      "command": "node",
-      "args": ["/absolute/path/to/yomrishon-mcp-sora/dist/index.js"],
-      "env": {
-        "OPENAI_API_KEY": "sk-..."
-      }
-    }
-  }
-}
-```
-
-### With npx (if published)
-
-```json
-{
-  "mcpServers": {
-    "sora": {
-      "command": "npx",
-      "args": ["yomrishon-mcp-sora"],
-      "env": {
-        "OPENAI_API_KEY": "sk-..."
-      }
-    }
-  }
-}
-```
-
-### HTTP transport (remote / multi-client)
-
-When `MCP_TRANSPORT=http`, the server starts a Streamable HTTP endpoint instead of using stdio.
+The server exposes a Streamable HTTP endpoint.
 Each request carries its own API key via the `Authorization` header, so a single server instance can serve many clients with different OpenAI accounts.
 
 #### Start the server
 
 ```bash
-MCP_TRANSPORT=http MCP_HTTP_PORT=3000 node dist/index.js
+MCP_HTTP_PORT=3000 node dist/index.js
 ```
 
 Or with Docker:
 
 ```bash
 docker run -p 3000:3000 \
-  -e MCP_TRANSPORT=http \
   -e MCP_HTTP_HOST=0.0.0.0 \
   yomrishon-mcp-sora
 ```
@@ -244,7 +204,7 @@ Point your MCP client at the HTTP endpoint:
 - The server runs **stateless** — no session tokens or cookies are stored.
 - Always deploy behind a TLS-terminating reverse proxy (nginx, Caddy, etc.) in production.
 - `MCP_HTTP_HOST` defaults to `127.0.0.1` (loopback only). Set to `0.0.0.0` to accept remote connections.
-- If `OPENAI_API_KEY` is set alongside HTTP mode, it acts as a fallback when clients omit the header.
+- If `OPENAI_API_KEY` is set, it acts as a fallback when clients omit the header.
 
 ---
 

@@ -2,12 +2,10 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import type { OpenAIClient } from "./openai-client.js";
 
 /**
- * Per-request context for HTTP transport mode.
+ * Per-request context.
  *
- * In stdio mode a single OpenAIClient is used for all calls.
- * In HTTP mode each request may carry a different API key, so we
- * store the per-session client in AsyncLocalStorage and resolve it
- * at tool-call time.
+ * Each HTTP request may carry a different API key, so we store the
+ * per-request client in AsyncLocalStorage and resolve it at tool-call time.
  */
 export interface RequestContext {
   client: OpenAIClient;

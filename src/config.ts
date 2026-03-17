@@ -1,7 +1,4 @@
-export type TransportMode = "stdio" | "http";
-
 export interface Config {
-  transport: TransportMode;
   openaiApiKey: string | null;
   openaiBaseUrl: string;
   defaultModel: string;
@@ -14,26 +11,10 @@ export interface Config {
 }
 
 export function loadConfig(): Config {
-  const transport = (process.env.MCP_TRANSPORT ?? "stdio") as TransportMode;
-  if (transport !== "stdio" && transport !== "http") {
-    throw new Error(
-      `Invalid MCP_TRANSPORT "${transport}". Must be "stdio" or "http".`
-    );
-  }
-
+  // API key is optional at startup — clients provide their own key per request.
   const apiKey = process.env.OPENAI_API_KEY ?? null;
 
-  // In stdio mode, the API key is required at startup.
-  // In HTTP mode, clients can provide their own key per session.
-  if (transport === "stdio" && !apiKey) {
-    throw new Error(
-      "OPENAI_API_KEY environment variable is required in stdio mode. " +
-        "Set it in your environment or .env file before starting the server."
-    );
-  }
-
   return {
-    transport,
     openaiApiKey: apiKey,
     openaiBaseUrl: process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1",
     defaultModel: process.env.SORA_DEFAULT_MODEL ?? "sora-2",
