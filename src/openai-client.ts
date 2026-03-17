@@ -207,7 +207,7 @@ export class OpenAIClient {
     };
     if (params.input_reference) body.input_reference = params.input_reference;
     if (params.characters?.length) body.characters = params.characters;
-    if (params.metadata) body.metadata = params.metadata;
+    // metadata is MCP-only context; OpenAI API does not accept it
 
     const raw = await this.request<RawVideoResponse>(
       "POST",
@@ -442,14 +442,37 @@ export class OpenAIClient {
     fileId: string,
     description?: string
   ): Promise<Character> {
-    const body: Record<string, unknown> = { name, file_id: fileId };
-    if (description) body.description = description;
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("file_id", fileId);
+    if (description) formData.append("description", description);
 
-    const raw = await this.request<RawCharacterResponse>(
-      "POST",
-      "/videos/characters",
-      body
-    );
+    const requestId = this.nextRequestId();
+    const url = `${this.baseUrl}/videos/characters`;
+
+    this.logger.debug("openai_create_character", { requestId, name, fileId });
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: "POST",
+        headers: { Authorization: this.authHeader },
+        body: formData,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw openaiApiError(
+        `Network error creating character: ${message}`,
+        undefined,
+        { requestId, path: "/videos/characters" }
+      );
+    }
+
+    if (!response.ok) {
+      return this.handleErrorResponse(response, requestId, "/videos/characters");
+    }
+
+    const raw = (await response.json()) as RawCharacterResponse;
     return this.normalizeCharacter(raw);
   }
 
