@@ -3,13 +3,7 @@ import type { OpenAIClient } from "../openai-client.js";
 import type { Config } from "../config.js";
 import type { Logger } from "../logger.js";
 import { ExtendVideoSchema } from "../validation.js";
-import {
-  validateModel,
-  validateDuration,
-  validateExtendSupport,
-} from "../validation.js";
 import { formatErrorForMcp, assetError } from "../errors.js";
-import { getModelCapabilities } from "../capabilities.js";
 import { getRequestClient } from "../request-context.js";
 
 export function register(
@@ -31,29 +25,6 @@ export function register(
     async (params) => {
       try {
         const client = getRequestClient(defaultClient);
-        const model = (params.model as string) ?? config.defaultModel;
-
-        validateModel(model);
-        validateExtendSupport(model);
-
-        // Validate extension duration against model limits
-        if (params.seconds) {
-          const caps = getModelCapabilities(model)!;
-          if (
-            caps.maxExtensionSeconds &&
-            (params.seconds as number) > caps.maxExtensionSeconds
-          ) {
-            throw assetError(
-              `Extension duration ${params.seconds}s exceeds maximum of ${caps.maxExtensionSeconds}s for model "${model}".`,
-              {
-                model,
-                requested: params.seconds,
-                max: caps.maxExtensionSeconds,
-              }
-            );
-          }
-          validateDuration(model, params.seconds as number);
-        }
 
         // Pre-check: verify the source video is completed
         const sourceVideo = await client.getVideo(params.video_id as string);
@@ -66,13 +37,11 @@ export function register(
         }
 
         logger.info("extend_video", {
-          model,
           video_id: params.video_id,
           seconds: params.seconds,
         });
 
         const job = await client.extendVideo({
-          model,
           video_id: params.video_id as string,
           prompt: params.prompt as string,
           seconds: params.seconds as number | undefined,

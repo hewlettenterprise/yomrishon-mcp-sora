@@ -227,14 +227,14 @@ export const CreateVideoSchema = {
     .string()
     .optional()
     .describe(
-      "Video resolution, e.g. 1920x1080, 1080x1920, 1080x1080. Defaults to 1920x1080."
+      "Video resolution, e.g. 1280x720, 720x1280, 1792x1024, 1024x1792. Defaults to 720x1280."
     ),
   seconds: z
     .number()
     .int()
     .positive()
     .optional()
-    .describe("Video duration in seconds (e.g. 5, 10, 15, 20). Defaults to 10."),
+    .describe("Video duration in seconds (allowed: 4, 8, 12). Defaults to 4."),
   input_reference: z
     .object({
       type: z
@@ -332,10 +332,6 @@ export const DownloadVideoSchema = {
 };
 
 export const EditVideoSchema = {
-  model: z
-    .string()
-    .optional()
-    .describe("Model to use for the edit. Defaults to server config."),
   source_video_id: z
     .string()
     .min(1)
@@ -344,32 +340,9 @@ export const EditVideoSchema = {
     .string()
     .min(1)
     .describe("Editing prompt describing the desired changes to the source video."),
-  size: z
-    .string()
-    .optional()
-    .describe("Output resolution. Defaults to source video size."),
-  seconds: z
-    .number()
-    .int()
-    .positive()
-    .optional()
-    .describe("Output duration in seconds."),
-  characters: z
-    .array(
-      z.object({
-        id: z.string().describe("Character asset ID"),
-        name: z.string().describe("Character name"),
-      })
-    )
-    .optional()
-    .describe("Characters to include in the edited video."),
 };
 
 export const ExtendVideoSchema = {
-  model: z
-    .string()
-    .optional()
-    .describe("Model to use for the extension. Defaults to server config."),
   video_id: z
     .string()
     .min(1)
@@ -385,7 +358,7 @@ export const ExtendVideoSchema = {
     .int()
     .positive()
     .optional()
-    .describe("Duration of the extension in seconds."),
+    .describe("Duration of the extension in seconds (allowed: 4, 8, 12, 16, 20)."),
 };
 
 export const CreateCharacterSchema = {
@@ -444,19 +417,11 @@ export const WaitForVideoSchema = {
 };
 
 export const RemixVideoSchema = {
-  model: z.string().optional().describe("Model to use."),
   source_video_id: z
     .string()
     .min(1)
     .describe("Source video ID to remix."),
   prompt: z.string().min(1).describe("Remix prompt."),
-  size: z.string().optional().describe("Output resolution."),
-  seconds: z
-    .number()
-    .int()
-    .positive()
-    .optional()
-    .describe("Output duration in seconds."),
 };
 
 export const HelpPromptSchema = {

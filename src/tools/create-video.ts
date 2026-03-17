@@ -35,8 +35,8 @@ export function register(
       try {
         const client = getRequestClient(defaultClient);
         const model = (params.model as string) ?? config.defaultModel;
-        const size = (params.size as string) ?? "1920x1080";
-        const seconds = (params.seconds as number) ?? 10;
+        const size = (params.size as string) ?? "720x1280";
+        const seconds = (params.seconds as number) ?? 4;
 
         validateModel(model);
         validateSize(model, size);

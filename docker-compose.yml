@@ -1,7 +1,7 @@
 services:
 
   mcp-sora:
-    image: yomrishon/mcp-sora:latest
+    build: .
     platform: linux/amd64
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}

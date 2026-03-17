@@ -195,7 +195,7 @@ export class OpenAIClient {
       model: params.model,
       prompt: params.prompt,
       size: params.size,
-      duration: params.seconds,
+      seconds: String(params.seconds),
     };
     if (params.input_reference) body.input_reference = params.input_reference;
     if (params.characters?.length) body.characters = params.characters;
@@ -203,7 +203,7 @@ export class OpenAIClient {
 
     const raw = await this.request<RawVideoResponse>(
       "POST",
-      "/videos/generations",
+      "/videos",
       body
     );
     return this.normalizeVideoJob(raw);
@@ -254,21 +254,13 @@ export class OpenAIClient {
   }
 
   async editVideo(params: {
-    model: string;
     source_video_id: string;
     prompt: string;
-    size?: string;
-    seconds?: number;
-    characters?: Array<{ id: string; name: string }>;
   }): Promise<VideoJob> {
     const body: Record<string, unknown> = {
-      model: params.model,
-      source_video_id: params.source_video_id,
       prompt: params.prompt,
+      video: { id: params.source_video_id },
     };
-    if (params.size) body.size = params.size;
-    if (params.seconds) body.duration = params.seconds;
-    if (params.characters?.length) body.characters = params.characters;
 
     const raw = await this.request<RawVideoResponse>(
       "POST",
@@ -279,17 +271,15 @@ export class OpenAIClient {
   }
 
   async extendVideo(params: {
-    model: string;
     video_id: string;
     prompt: string;
     seconds?: number;
   }): Promise<VideoJob> {
     const body: Record<string, unknown> = {
-      model: params.model,
-      video_id: params.video_id,
       prompt: params.prompt,
+      video: { id: params.video_id },
     };
-    if (params.seconds) body.duration = params.seconds;
+    if (params.seconds) body.seconds = String(params.seconds);
 
     const raw = await this.request<RawVideoResponse>(
       "POST",
@@ -300,23 +290,16 @@ export class OpenAIClient {
   }
 
   async remixVideo(params: {
-    model: string;
     source_video_id: string;
     prompt: string;
-    size?: string;
-    seconds?: number;
   }): Promise<VideoJob> {
     const body: Record<string, unknown> = {
-      model: params.model,
-      source_video_id: params.source_video_id,
       prompt: params.prompt,
     };
-    if (params.size) body.size = params.size;
-    if (params.seconds) body.duration = params.seconds;
 
     const raw = await this.request<RawVideoResponse>(
       "POST",
-      "/videos/remixes",
+      `/videos/${encodeURIComponent(params.source_video_id)}/remix`,
       body
     );
     return this.normalizeVideoJob(raw);

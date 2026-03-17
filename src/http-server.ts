@@ -1,10 +1,12 @@
 import { createServer as createHttpServer } from "node:http";
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import type { Config } from "./config.js";
 import type { ServerContext } from "./server.js";
 import { OpenAIClient } from "./openai-client.js";
 import { runWithClient } from "./request-context.js";
+import { registerAllTools } from "./tools/index.js";
 
 // ---------------------------------------------------------------------------
 //  Helpers
@@ -53,11 +55,7 @@ export async function startHttpServer(
   ctx: ServerContext,
   config: Config
 ): Promise<void> {
-  const transport = new StreamableHTTPServerTransport({
-    sessionIdGenerator: undefined, // stateless
-  });
-
-  await ctx.server.connect(transport);
+  const serverInfo = { name: "yomrishon-mcp-sora", version: "1.0.1" };
 
   const httpServer = createHttpServer(async (req: IncomingMessage, res: ServerResponse) => {
     const pathname = new URL(
@@ -75,8 +73,16 @@ export async function startHttpServer(
     // MCP endpoint
     if (pathname === "/mcp") {
       try {
-        // For POST (tool calls), resolve the API key and set up the per-request client.
-        // GET (SSE) and DELETE (session close) are protocol-level — pass through.
+        // Create a fresh transport + server per request (stateless mode).
+        // MCP SDK v1.27+ requires this for stateless transports.
+        const transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: undefined,
+        });
+
+        const server = new McpServer(serverInfo);
+        registerAllTools(server, ctx.defaultClient, config, ctx.logger);
+        await server.connect(transport);
+
         if (req.method === "POST") {
           const apiKey =
             extractBearerToken(req) ?? config.openaiApiKey;
@@ -100,10 +106,15 @@ export async function startHttpServer(
           await runWithClient(client, () =>
             transport.handleRequest(req, res, body)
           );
-        } else {
-          // GET / DELETE — protocol-level, no client needed
+        } else if (req.method === "GET" || req.method === "DELETE") {
           await transport.handleRequest(req, res);
+        } else {
+          res.writeHead(405, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Method not allowed" }));
         }
+
+        await transport.close();
+        await server.close();
       } catch (err) {
         ctx.logger.error("http_request_error", {
           error: err instanceof Error ? err.message : String(err),
