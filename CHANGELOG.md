@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/Yom-Rishon/yomrishon-mcp-sora/compare/v1.3.0...v1.3.1) (2026-03-17)
+
+
+### Bug Fixes
+
+* correct quotation marks in version extraction command in Docker publish workflow ([7f025e7](https://github.com/Yom-Rishon/yomrishon-mcp-sora/commit/7f025e766598087251c2776115ec88547718513c))
+
 ## [1.3.0](https://github.com/Yom-Rishon/yomrishon-mcp-sora/compare/v1.2.0...v1.3.0) (2026-03-17)
 
 
